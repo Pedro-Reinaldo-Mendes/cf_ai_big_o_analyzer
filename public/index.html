@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Big O Analyzer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white font-sans p-8 max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold mb-4 text-orange-500">Big O Complexity Analyzer</h1>
+    <p class="mb-6 text-gray-400">Paste your code below to get an AI analysis of its time & space complexity.</p>
+
+    <textarea id="code"
+        class="w-full h-40 bg-gray-800 border border-gray-700 p-4 rounded mb-4 text-sm font-mono focus:outline-none focus:border-orange-500"
+        placeholder="Paste your function here..."></textarea>
+
+    <button onclick="analyze()" id="btn"
+        class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded font-bold transition">Analyze
+        Complexity</button>
+
+    <div id="result" class="mt-8 hidden">
+        <h2 class="text-xl font-bold mb-2">Analysis:</h2>
+        <div id="output" class="bg-gray-800 p-4 rounded border-l-4 border-orange-500 whitespace-pre-wrap"></div>
+    </div>
+
+    <div class="mt-12 border-t border-gray-800 pt-6">
+        <h3 class="text-lg font-bold mb-4">Recent Analyses (From Durable Object):</h3>
+        <ul id="history" class="space-y-3 text-sm text-gray-400"></ul>
+    </div>
+
+    <script>
+        async function analyze() {
+            const code = document.getElementById('code').value;
+            const btn = document.getElementById('btn');
+
+            btn.innerText = "Analyzing...";
+            btn.disabled = true;
+
+            const res = await fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+
+            const data = await res.json();
+            document.getElementById('output').innerText = data.analysis;
+            document.getElementById('result').classList.remove('hidden');
+            btn.innerText = "Analyze Complexity";
+            btn.disabled = false;
+            loadHistory();
+        }
+
+        async function loadHistory() {
+            const res = await fetch('/history');
+            const data = await res.json();
+            const list = document.getElementById('history');
+            list.innerHTML = data.map(item => `
+        <li class="bg-gray-800 p-3 rounded">
+          <div class="font-mono text-orange-400 mb-1">${item.code}</div>
+          <div class="text-xs">${item.analysis.substring(0, 100)}...</div>
+        </li>
+      `).join('');
+        }
+        loadHistory();
+    </script>
+</body>
+
+</html>
